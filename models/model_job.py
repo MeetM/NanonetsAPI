@@ -16,3 +16,9 @@ class ModelJob(db.Model):
 
     def get_model_id(self):
         return self.id
+
+    @classmethod
+    def delete_model(cls, model_id):
+        model_job = cls.query.filter_by(id=model_id).first()
+        db.session.delete(model_job)
+        db.session.commit()

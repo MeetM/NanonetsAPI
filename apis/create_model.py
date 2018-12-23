@@ -3,7 +3,7 @@ from flask import request
 from models import db
 from models.model_job import ModelJob
 
-api = Namespace('Create Model')
+api = Namespace('create_model')
 
 # Swagger params
 _create_model_request = api.model('Create Model', {

@@ -1,5 +1,5 @@
 from flask_restplus import Api
-
+from .delete_model import api as delete_model_api
 from .create_model import api as create_model_api
 
 api = Api(
@@ -9,4 +9,4 @@ api = Api(
 )
 
 api.add_namespace(create_model_api)
-
+api.add_namespace(delete_model_api)
