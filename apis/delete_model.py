@@ -1,6 +1,6 @@
 from flask_restplus import Namespace, fields, Resource
 from flask import request
-from models.model_job import ModelJob
+from ops.job_count_ops import JobCount
 
 api = Namespace('delete_model')
 
@@ -18,5 +18,8 @@ class DeleteModel(Resource):
     def delete(self):
         data = request.get_json()
         model_id = data["model_id"]
-        ModelJob.delete_model(model_id)
-        return 204
+        job_status = JobCount(model_id)
+        if job_status == JobCount.IN_TRAINING:
+            return {"error": "Training in progress. Cannot delete"}, 409
+        # TODO delete model training records if training completed
+        return {}, 204

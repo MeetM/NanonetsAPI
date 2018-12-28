@@ -1,9 +1,7 @@
 from flask_restplus import Namespace, fields, Resource
 from flask import request
-from models import db
-from models.model_job import ModelJob
-import boto3
-
+from ops.batch_ops import BatchOps
+from ops.job_count_ops import JobCount
 
 api = Namespace('start_training')
 
@@ -13,7 +11,6 @@ _st_request = api.model('Start Training Request', {
 })
 
 
-
 @api.route('')
 class StartTraining(Resource):
 
@@ -21,71 +18,15 @@ class StartTraining(Resource):
     def post(self):
         data = request.get_json()
         model_id = data["model_id"]
-
-        job_ids =[]
-        # create_job_queue(model_id, queue_name)
-        for i in [0.01, 0.001, 0.001]:
-            for j in [1, 2, 4]:
+        jc = JobCount(model_id)
+        if jc.get_training_status() != JobCount.TRAINING_NOT_STARTED:
+            return {"error": "Training already started. This duplicate request is rejected."}, 409
+        batch = BatchOps(model_id)
+        for i in [0.01, 0.001, 0.0001]:
+            for j in [1, 2]:
                 for k in [1000, 2000, 4000]:
-                    # id = create_job(job_name(model_id, i, j, k), i, j, k)
-                    # job_ids.append(id)
-                    pass
-        # create_dependent_job(job_ids)
+                    batch.schedule_training_job(i, j, k)
+                    jc.incr_scheduled_job_count()
+        batch.schedule_reducer_job()
+        jc.incr_scheduled_job_count()
         return 201
-
-
-def job_name(model_id, i, j, k):
-    return str(model_id) + "_" + str(i) + "_" + str(j) + "_" + str(k)
-
-
-# def create_job(job_name, i, j, k):
-#     client = boto3.client('batch')
-#     response = client.submit_job(
-#         jobName=job_name,
-#         jobQueue='nn-compute-environment',
-#         jobDefinition='string',
-#         parameters={
-#             'string': 'string'
-#         },
-#         containerOverrides={
-#             'vcpus': 123,
-#             'memory': 123,
-#             'command': [
-#                 'string',
-#             ],
-#             'instanceType': 'string',
-#             'environment': [
-#                 {
-#                     'name': 'string',
-#                     'value': 'string'
-#                 },
-#             ]
-#         },
-#         nodeOverrides={
-#             'nodePropertyOverrides': [
-#                 {
-#                     'targetNodes': 'string',
-#                     'containerOverrides': {
-#                         'vcpus': 123,
-#                         'memory': 123,
-#                         'command': [
-#                             'string',
-#                         ],
-#                         'instanceType': 'string',
-#                         'environment': [
-#                             {
-#                                 'name': 'string',
-#                                 'value': 'string'
-#                             },
-#                         ]
-#                     }
-#                 },
-#             ]
-#         },
-#         retryStrategy={
-#             'attempts': 123
-#         },
-#         timeout={
-#             'attemptDurationSeconds': 123
-#         }
-#     )

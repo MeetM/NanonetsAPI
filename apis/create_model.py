@@ -8,7 +8,7 @@ api = Namespace('create_model')
 # Swagger params
 _create_model_request = api.model('Create Model', {
     'name': fields.String(required=True, description='Model Name'),
-    'desc': fields.String(required=False, description='Model Description')
+    'description': fields.String(required=False, description='Model Description')
 })
 
 _create_model_response = api.model('Create Model Response', {
@@ -24,7 +24,7 @@ class CreateModel(Resource):
     def post(self):
         data = request.get_json()
         name = data["name"]
-        desc = data["desc"]
+        desc = data["description"]
         model = ModelJob(name=name, desc=desc)
         db.session.add(model)
         db.session.commit()
